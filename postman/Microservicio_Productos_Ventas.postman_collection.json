@@ -1,0 +1,1564 @@
+{
+  "info": {
+    "_postman_id": "f6e3fc4a-c75c-5db4-a1ed-f5089c0c828e",
+    "name": "Microservicio Productos y Ventas",
+    "description": "Colección de pruebas de la API REST (Spring Boot + MySQL). Ejecutar en orden: las solicitudes comparten variables (productoId, ventaId).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "P01 Obtener todos los productos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Devuelve un arreglo con productos\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "P02 Consultar un producto existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Producto con id 1 y campos completos\", () => { const j = pm.response.json();",
+                  "  pm.expect(j.id).to.eql(1); pm.expect(j).to.include.keys(\"nombre\",\"descripcion\",\"precio\",\"stock\",\"estado\",\"fechaCreacion\",\"fechaActualizacion\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "1"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "P03 Consultar un producto inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});",
+                  "",
+                  "pm.test(\"Mensaje indica el id\", () => pm.expect(pm.response.json().detail).to.include(\"999999\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "999999"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "P04 Registrar un producto correctamente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"sufijo\", Date.now().toString().slice(-6));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Devuelve id, estado ACTIVO y cabecera Location\", () => {",
+                  "  pm.expect(j.id).to.be.a(\"number\"); pm.expect(j.estado).to.eql(\"ACTIVO\");",
+                  "  pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/api/productos/\" + j.id); });",
+                  "pm.collectionVariables.set(\"productoId\", j.id);",
+                  "pm.collectionVariables.set(\"productoPrecio\", j.precio);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teclado inalámbrico Logitech K380 {{sufijo}}\",\n  \"descripcion\": \"Teclado Bluetooth multidispositivo\",\n  \"precio\": 649.0,\n  \"stock\": 25,\n  \"estado\": \"ACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P05 Registrar un producto con datos inválidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});",
+                  "",
+                  "pm.test(\"Errores por campo: nombre, precio y stock\", () => {",
+                  "  const e = pm.response.json().errores; pm.expect(e).to.include.keys(\"nombre\",\"precio\",\"stock\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"precio\": -10,\n  \"stock\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P06 Registrar un producto con nombre duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Laptop Lenovo IdeaPad 3\",\n  \"precio\": 100,\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P07 Registrar un producto con stock decimal (tipo inválido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Stock decimal\",\n  \"precio\": 10,\n  \"stock\": 1.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P08 Actualizar un producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Precio y stock actualizados\", () => { pm.expect(j.precio).to.eql(599.5); pm.expect(j.stock).to.eql(30); });",
+                  "pm.collectionVariables.set(\"productoPrecio\", j.precio);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teclado inalámbrico Logitech K380 {{sufijo}}\",\n  \"descripcion\": \"Teclado Bluetooth (precio actualizado)\",\n  \"precio\": 599.5,\n  \"stock\": 30,\n  \"estado\": \"ACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P09 Actualizar un producto inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "999999"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"No existe\",\n  \"precio\": 1,\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P10 Actualizar un producto con precio negativo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teclado\",\n  \"precio\": -1,\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P11 Buscar productos por nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Todos los resultados contienen 'logitech'\", () => {",
+                  "  const j = pm.response.json(); pm.expect(j.length).to.be.above(0);",
+                  "  j.forEach(p => pm.expect(p.nombre.toLowerCase()).to.include(\"logitech\")); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/buscar?nombre=logitech",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "nombre",
+                  "value": "logitech"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "P12 Buscar sin parámetro nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/buscar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "buscar"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "P13 Registrar producto temporal (para eliminar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"productoTemporalId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Producto temporal {{sufijo}}\",\n  \"precio\": 10,\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "P14 Eliminar un producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 204\", function () { pm.response.to.have.status(204); });",
+                  "",
+                  "pm.test(\"Sin cuerpo de respuesta\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoTemporalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoTemporalId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "P15 Eliminar un producto ya eliminado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoTemporalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoTemporalId}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ventas",
+      "item": [
+        {
+          "name": "V01 Obtener todas las ventas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Arreglo de ventas con detalles\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\");",
+                  "  if (j.length) pm.expect(j[0]).to.include.keys(\"id\",\"fecha\",\"total\",\"estado\",\"detalles\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V02 Consultar una venta existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Total = suma de subtotales\", () => { const j = pm.response.json();",
+                  "  const suma = j.detalles.reduce((s, d) => s + d.subtotal, 0); pm.expect(j.total).to.be.closeTo(suma, 0.001); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "1"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V03 Consultar una venta inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "999999"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V04 Stock previo de productos a vender",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"mouseStock\", j.stock); pm.collectionVariables.set(\"mousePrecio\", j.precio);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "2"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V05 Registrar una venta correctamente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "",
+                  "const j = pm.response.json();",
+                  "const pT = Number(pm.collectionVariables.get(\"productoPrecio\"));",
+                  "const pM = Number(pm.collectionVariables.get(\"mousePrecio\"));",
+                  "pm.test(\"Subtotales = cantidad × precio unitario\", () => {",
+                  "  pm.expect(j.detalles[0].subtotal).to.be.closeTo(3 * pT, 0.001);",
+                  "  pm.expect(j.detalles[1].subtotal).to.be.closeTo(2 * pM, 0.001); });",
+                  "pm.test(\"Total = suma de subtotales\", () => pm.expect(j.total).to.be.closeTo(3 * pT + 2 * pM, 0.001));",
+                  "pm.test(\"Estado REGISTRADA y Location\", () => { pm.expect(j.estado).to.eql(\"REGISTRADA\");",
+                  "  pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/api/ventas/\" + j.id); });",
+                  "pm.collectionVariables.set(\"ventaId\", j.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productos\": [\n    { \"productoId\": {{productoId}}, \"cantidad\": 3 },\n    { \"productoId\": 2, \"cantidad\": 2 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "V06 Verificar descuento de inventario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Stock 30 - 3 = 27\", () => pm.expect(pm.response.json().stock).to.eql(27));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V07 Registrar una venta sin productos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productos\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "V08 Registrar una venta con cantidad cero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"productos\": [ { \"productoId\": {{productoId}}, \"cantidad\": 0 } ] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "V09 Vender un producto inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productos\": [\n    {\n      \"productoId\": 999999,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "V10 Vender más unidades de las disponibles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});",
+                  "pm.test(\"Mensaje de stock insuficiente\", () => pm.expect(pm.response.json().detail).to.include(\"Stock insuficiente\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"productos\": [ { \"productoId\": 2, \"cantidad\": 1 }, { \"productoId\": {{productoId}}, \"cantidad\": 5000 } ] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "V11 Venta fallida no modifica el inventario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"El stock del mouse solo refleja la venta V05 (no la fallida V10)\", () =>",
+                  "  pm.expect(pm.response.json().stock).to.eql(Number(pm.collectionVariables.get(\"mouseStock\")) - 2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "2"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V12 Consultar ventas por fecha",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = new Date();",
+                  "pm.collectionVariables.set(\"hoy\", new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Incluye la venta registrada hoy\", () => {",
+                  "  const ids = pm.response.json().map(v => v.id); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"ventaId\"))); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/fecha?inicio={{hoy}}&fin={{hoy}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "fecha"
+              ],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "{{hoy}}"
+                },
+                {
+                  "key": "fin",
+                  "value": "{{hoy}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V13 Consultar ventas con inicio posterior a fin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/fecha?inicio=2026-12-31&fin=2026-01-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "fecha"
+              ],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2026-12-31"
+                },
+                {
+                  "key": "fin",
+                  "value": "2026-01-01"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V14 Consultar el detalle de una venta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Dos partidas con precio unitario y subtotal\", () => { const j = pm.response.json();",
+                  "  pm.expect(j).to.have.lengthOf(2); j.forEach(d => pm.expect(d).to.include.keys(\"productoId\",\"nombreProducto\",\"cantidad\",\"precioUnitario\",\"subtotal\")); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/{{ventaId}}/detalle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "{{ventaId}}",
+                "detalle"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V15 Eliminar un producto con ventas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V16 Cancelar una venta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/{{ventaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "{{ventaId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V17 Verificar reposición de inventario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test(\"Stock vuelve a 30\", () => pm.expect(pm.response.json().stock).to.eql(30));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V18 Cancelar una venta ya cancelada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/{{ventaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "{{ventaId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "V19 Cancelar una venta inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Cuerpo Problem Details (RFC 9457)\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", pm.response.code);",
+                  "    pm.expect(j).to.have.property(\"detail\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ventas/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ventas",
+                "999999"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "productoId",
+      "value": ""
+    },
+    {
+      "key": "productoPrecio",
+      "value": ""
+    },
+    {
+      "key": "productoTemporalId",
+      "value": ""
+    },
+    {
+      "key": "ventaId",
+      "value": ""
+    },
+    {
+      "key": "mouseStock",
+      "value": ""
+    },
+    {
+      "key": "mousePrecio",
+      "value": ""
+    },
+    {
+      "key": "hoy",
+      "value": ""
+    },
+    {
+      "key": "sufijo",
+      "value": ""
+    }
+  ]
+}

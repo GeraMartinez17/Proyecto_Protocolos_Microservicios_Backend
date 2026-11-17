@@ -1,0 +1,10 @@
+# Perfil de pruebas: base de datos MySQL separada que se limpia y migra en cada ejecución
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:mysql://localhost:3306/db_microservicios_test?serverTimezone=America/Mexico_City}
+  flyway:
+    clean-disabled: false
+logging:
+  level:
+    root: WARN
+    com.proyecto.microservicio: INFO

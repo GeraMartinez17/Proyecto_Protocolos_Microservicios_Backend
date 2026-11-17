@@ -1,0 +1,28 @@
+# Compilación
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Credenciales y configuración local (NUNCA subir)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+*.swp
+
+# Sistema / logs
+.DS_Store
+*.log
+logs/
+HELP.md
